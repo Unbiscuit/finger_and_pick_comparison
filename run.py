@@ -1,13 +1,12 @@
 import sys
 import matplotlib
 import os
-matplotlib.use('QtAgg')
+matplotlib.use('Qt5Agg')
 
-from PyQt6 import QtCore, QtWidgets
-from PyQt6.QtWidgets import QFileDialog
+from PyQt5 import QtCore, QtWidgets
+from PyQt5.QtWidgets import QFileDialog
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg, NavigationToolbar2QT
-from matplotlib.figure import Figure
 from GUI.interface import Ui_MainWindow
 from algs import methods
 

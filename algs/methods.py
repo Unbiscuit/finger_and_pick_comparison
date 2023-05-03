@@ -57,12 +57,12 @@ class jrock:
 
         plt.subplot(211)
         librosa.display.specshow(librosa.power_to_db(mel_spec1, ref=np.max), y_axis='mel', fmax=8000, x_axis='time')
-        plt.title(f'Mel spectrogram of {self.path1}')
+        plt.title(f'Mel spectrogram (pick)')
         plt.tight_layout()
 
         plt.subplot(212)
         librosa.display.specshow(librosa.power_to_db(mel_spec2, ref=np.max), y_axis='mel', fmax=8000, x_axis='time')
-        plt.title(f'Mel spectrogram of {self.path2}')
+        plt.title(f'Mel spectrogram (fingerstyle)')
         plt.tight_layout()
 
         return fig
@@ -82,15 +82,15 @@ class jrock:
         gs.update(hspace=1)
 
         ax1 = plt.subplot(gs[0, 1:3])
-        img1 = librosa.display.waveshow(self.audio_file1, sr=self.sr_1, color='orange', label=f'{self.path1}')
-        img2 = librosa.display.waveshow(self.audio_file2, sr=self.sr_2, alpha=0.75, color='g', label=f'{self.path2}')
+        img1 = librosa.display.waveshow(self.audio_file1, sr=self.sr_1, color='orange', label=f'{self.path1[-14:]}')
+        img2 = librosa.display.waveshow(self.audio_file2, sr=self.sr_2, alpha=0.75, color='g', label=f'{self.path2[-12:]}')
         ax1.set_title(f'Audio Files')
         ax1.set_ylabel('Amplitude')
         ax1.set_xlabel('Time (seconds)')
 
         ax2 = plt.subplot(gs[1, :2])
         img3 = librosa.display.waveshow(y=self.audio_file1, sr=self.sr_1, alpha=0.4, ax=ax2)
-        ax2.plot(self.t1, normalize(spectral_centroid_1), color='orange', label=f'{self.path1}')
+        ax2.plot(self.t1, normalize(spectral_centroid_1), color='orange', label=f'{self.path1[-14:]}')
         ax2.set_title(f'Spectral Centroids')
         ax2.set_ylabel('Frequency')
         ax2.set_xlabel('Time (seconds)')
@@ -99,15 +99,15 @@ class jrock:
         # Plot the spectral centroid for audio file 2 in the same figure
         ax3 = plt.subplot(gs[1, 2:])
         img4 = librosa.display.waveshow(y=self.audio_file2, sr=self.sr_2, alpha=0.4, ax=ax3)
-        ax3.plot(self.t2, normalize(spectral_centroid_2), color='g', label=f'{self.path2}')
+        ax3.plot(self.t2, normalize(spectral_centroid_2), color='g', label=f'{self.path2[-12:]}')
         ax3.set_title(f'Spectral Centroids')
         ax3.set_ylabel('')
         ax3.set_xlabel('Time (seconds)')
         ax3.legend()
 
         ax4 = plt.subplot(gs[2, 1:3])
-        ax4.plot(shortened_centroid_1, color='orange', label=f'{self.path1}')
-        ax4.plot(shortened_centroid_2, color='g', label=f'{self.path2}')
+        ax4.plot(shortened_centroid_1, color='orange', label=f'{self.path1[-14:]}')
+        ax4.plot(shortened_centroid_2, color='g', label=f'{self.path2[-12:]}')
         ax4.set_title(f'Spectral Centroids Comparison')
         ax4.set_ylabel('')
         ax4.set_xlabel('Time (seconds)')
@@ -132,32 +132,32 @@ class jrock:
         plt.subplot(321)
         librosa.display.specshow(librosa.amplitude_to_db(magnitude, ref=np.max), y_axis='log', x_axis='time')
         plt.colorbar(format='%+2.0f dB')
-        plt.title(f'Original {self.path1}')
+        plt.title(f'Original {self.path1[-14:]}')
 
         plt.subplot(323)
         librosa.display.specshow(librosa.amplitude_to_db(harmonic, ref=np.max), y_axis='log', x_axis='time')
         plt.colorbar(format='%+2.0f dB')
-        plt.title(f'Harmonic {self.path1}')
+        plt.title(f'Harmonic {self.path1[-14:]}')
 
         plt.subplot(325)
         librosa.display.specshow(librosa.amplitude_to_db(percussive, ref=np.max), y_axis='log', x_axis='time')
         plt.colorbar(format='%+2.0f dB')
-        plt.title(f'Percussive {self.path1}')
+        plt.title(f'Percussive {self.path1[-14:]}')
 
         plt.subplot(322)
         librosa.display.specshow(librosa.amplitude_to_db(magnitude1, ref=np.max), y_axis='log', x_axis='time')
         plt.colorbar(format='%+2.0f dB')
-        plt.title(f'Original {self.path2}')
+        plt.title(f'Original {self.path2[-12:]}')
 
         plt.subplot(324)
         librosa.display.specshow(librosa.amplitude_to_db(harmonic1, ref=np.max), y_axis='log', x_axis='time')
         plt.colorbar(format='%+2.0f dB')
-        plt.title(f'Harmonic {self.path2}')
+        plt.title(f'Harmonic {self.path2[-12:]}')
 
         plt.subplot(326)
         librosa.display.specshow(librosa.amplitude_to_db(percussive1, ref=np.max), y_axis='log', x_axis='time')
         plt.colorbar(format='%+2.0f dB')
-        plt.title(f'Percussive {self.path2}')
+        plt.title(f'Percussive {self.path2[-12:]}')
 
         return fig
     
@@ -236,18 +236,18 @@ class jrock:
         fig, ax = plt.subplots(2, 2)
 
         img1 = librosa.display.specshow(tonnetz, y_axis='tonnetz', x_axis='time', ax=ax[0, 0])
-        ax[0, 0].set(title=f'Tonal Centroids (Tonnetz) of {self.path1}')
+        ax[0, 0].set(title=f'Tonal Centroids (Tonnetz) of {self.path1[-14:]}')
         ax[0, 0].label_outer()
         img2 = librosa.display.specshow(librosa.feature.chroma_cqt(y=harmonic_y, sr=self.sr_1), y_axis='chroma', x_axis='time', ax=ax[1, 0])
-        ax[1, 0].set(title=f'Chroma of {self.path1}')
+        ax[1, 0].set(title=f'Chroma of {self.path1[-14:]}')
         fig.colorbar(img1, ax=[ax[0, 0]])
         fig.colorbar(img2, ax=[ax[1, 0]])
 
         img3 = librosa.display.specshow(tonnetz1, y_axis='tonnetz', x_axis='time', ax=ax[0, 1])
-        ax[0, 1].set(title=f'Tonal Centroids (Tonnetz) of {self.path2}')
+        ax[0, 1].set(title=f'Tonal Centroids (Tonnetz) of {self.path2[-12:]}')
         ax[0, 1].label_outer()
         img4 = librosa.display.specshow(librosa.feature.chroma_cqt(y=harmonic_y1, sr=self.sr_2), y_axis='chroma', x_axis='time', ax=ax[1, 1])
-        ax[1, 1].set(title=f'Chroma of {self.path2}')
+        ax[1, 1].set(title=f'Chroma of {self.path2[-12:]}')
         fig.colorbar(img3, ax=[ax[0, 1]])
         fig.colorbar(img4, ax=[ax[1, 1]])
 
@@ -324,8 +324,8 @@ class jrock:
 
     '''Zero-Crossing Rate'''
     def zcr_func(self):
-        n0 = 0
-        n1 = 1000
+        n0 = 1000
+        n1 = 2000
         zrc_total_f1 = librosa.feature.zero_crossing_rate(self.audio_file1 + 0.0001, pad=False)# проверить еще раз смысл pad=False
         zrc_total_f2 = librosa.feature.zero_crossing_rate(self.audio_file2 + 0.0001, pad=False)
         zrc_interval_f1 = librosa.zero_crossings(self.audio_file1[n0:n1] + 0.0001, pad=False)
@@ -337,10 +337,12 @@ class jrock:
 
         ax1 = plt.subplot(gs[0, :2])
         img1 = librosa.display.waveshow(y=self.audio_file1, sr=self.sr_1, ax=ax1)
+        # ax1.plot(np.arange(0, len(self.audio_file1)) / self.sr_1, self.audio_file1)
         ax1.set_title(f'Waveplot fingerstyle (zero-crossing rate = {zrc_total_f1.sum()})')
 
         ax2 = plt.subplot(gs[0, 2:])
         img2 = librosa.display.waveshow(y=self.audio_file2, sr=self.sr_2, ax=ax2, color='green')
+        # ax2.plot(np.arange(0, len(self.audio_file2)) / self.sr_2, self.audio_file2)
         ax2.set_title(f'Waveplot pick (zero-crossing rate = {zrc_total_f2.sum()})')
 
         ax3 = plt.subplot(gs[1, :2])
@@ -389,15 +391,18 @@ class jrock:
 
         ax1 = plt.subplot(gs[0, :2])
         img1 = librosa.display.waveshow(y=self.audio_file1, sr=self.sr_1, alpha=0.4)
-        ax1.plot(self.t1, normalize(spectral_bandwidth_f1))
+        ax1.plot(self.t1, normalize(spectral_bandwidth_f1), color='green')
+        ax1.set_title('Spectral bendwidth (pick)')
 
         ax2 = plt.subplot(gs[0, 2:])
         img2 = librosa.display.waveshow(y=self.audio_file2, sr=self.sr_2, alpha=0.4)
-        ax2.plot(self.t2, normalize(spectral_bandwidth_f2))
+        ax2.plot(self.t2, normalize(spectral_bandwidth_f2), color='red')
+        ax2.set_title('Spectral bendwidth (fingerstyle)')
 
         ax3 = plt.subplot(gs[1, 1:3])
-        ax3.plot(self.t1, normalize(spectral_bandwidth_f1))
-        ax3.plot(self.t2, normalize(spectral_bandwidth_f2))
+        ax3.plot(self.t1, normalize(spectral_bandwidth_f1), color='green')
+        ax3.plot(self.t2, normalize(spectral_bandwidth_f2), color='red')
+        ax3.set_title('Spectral bendwidth comparison')
 
         return fig
     
