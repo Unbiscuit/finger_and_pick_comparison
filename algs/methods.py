@@ -72,8 +72,8 @@ class jrock:
         spectral_centroid_1 = librosa.feature.spectral_centroid(y=self.audio_file1, sr=self.sr_1)[0]
         spectral_centroid_2 = librosa.feature.spectral_centroid(y=self.audio_file2, sr=self.sr_2)[0]
         min_length = min(len(spectral_centroid_1), len(spectral_centroid_2))
-        shortened_centroid_1 = normalize(spectral_centroid_1)[:min_length]
-        shortened_centroid_2 = normalize(spectral_centroid_2)[:min_length]
+        shortened_centroid_1 = spectral_centroid_1[:min_length]
+        shortened_centroid_2 = spectral_centroid_2[:min_length]
 
         # Create a new figure and plot the spectral centroid for audio file 1
         fig = plt.subplots(figsize=(14, 6))
@@ -92,7 +92,7 @@ class jrock:
         img3 = librosa.display.waveshow(y=self.audio_file1, sr=self.sr_1, alpha=0.4, ax=ax2)
         ax2.plot(self.t1, normalize(spectral_centroid_1), color='orange', label=f'{self.path1[-12:]}')
         ax2.set_title(f'Spectral Centroids')
-        ax2.set_ylabel('Frequency')
+        ax2.set_ylabel('Amplitude')
         ax2.set_xlabel('Time (seconds)')
         ax2.legend()
 
@@ -109,7 +109,7 @@ class jrock:
         ax4.plot(shortened_centroid_1, color='orange', label=f'{self.path1[-12:]}')
         ax4.plot(shortened_centroid_2, color='g', label=f'{self.path2[-10:]}')
         ax4.set_title(f'Spectral Centroids Comparison')
-        ax4.set_ylabel('')
+        ax4.set_ylabel('Hz')
         ax4.set_xlabel('Time (seconds)')
         ax4.legend()
 
