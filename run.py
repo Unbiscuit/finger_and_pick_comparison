@@ -20,8 +20,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         self.setWindowTitle('gSpectrum')
 
-        self.path1 = None
-        self.path2 = None
+        self.path1 = 'audios/G_finger.wav'
+        self.path2 = 'audios/G_pick.wav'
 
         # Create the maptlotlib FigureCanvas object,
         # which defines a single set of axes as self.axes.
