@@ -18,11 +18,14 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         super(MainWindow, self).__init__(*args, **kwargs)
         self.setupUi(self)
 
+        self.setWindowTitle('gSpectrum')
+
         self.path1 = None
         self.path2 = None
 
         # Create the maptlotlib FigureCanvas object,
         # which defines a single set of axes as self.axes.
+
         
         self.mfcc.clicked.connect(self.show_mfcc)
         self.melspec.clicked.connect(self.show_melspec)
@@ -36,8 +39,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.zcr.clicked.connect(self.show_zcr)
         self.bendwith.clicked.connect(self.show_bendwith)
 
-        self.getfile1.clicked.connect(self.getFileName)
-        self.getfile2.clicked.connect(self.getFileName)
+        self.getfile1.clicked.connect(self.getFileName1)
+        self.getfile2.clicked.connect(self.getFileName2)
 
     def remove_widgets(self):
         for i in reversed(range(self.verticalLayout_2.count())): 
@@ -164,7 +167,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.verticalLayout_2.addWidget(self.toolbar)
         self.verticalLayout_2.addWidget(self.canvas)
 
-    def getFileName(self):
+    def getFileName1(self):
         file_filter = 'Audio File (*.wav)'
         responce = QFileDialog.getOpenFileName(
             parent=self,
@@ -174,10 +177,20 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             initialFilter='Audio File (*.wav)'
         )
 
-        if self.path1 == None:
-            self.path1 = str(responce[0])
-        else:
-            self.path2 = str(responce[0])
+        self.path1 = str(responce[0])
+
+    
+    def getFileName2(self):
+        file_filter = 'Audio File (*.wav)'
+        responce = QFileDialog.getOpenFileName(
+            parent=self,
+            caption='Select a file',
+            directory=os.getcwd(),
+            filter=file_filter,
+            initialFilter='Audio File (*.wav)'
+        )
+
+        self.path2 = str(responce[0])
 
 
 if __name__ == "__main__":

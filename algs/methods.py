@@ -324,27 +324,32 @@ class jrock:
 
     '''Zero-Crossing Rate'''
     def zcr_func(self):
-        n0 = 0
-        n1 = 1000
+        n0 = 6000
+        n1 = 7000
         zrc_total_f1 = librosa.feature.zero_crossing_rate(self.audio_file1 + 0.0001, pad=False)# проверить еще раз смысл pad=False
         zrc_total_f2 = librosa.feature.zero_crossing_rate(self.audio_file2 + 0.0001, pad=False)
         zrc_interval_f1 = librosa.zero_crossings(self.audio_file1[n0:n1] + 0.0001, pad=False)
         zrc_interval_f2 = librosa.zero_crossings(self.audio_file2[n0:n1] + 0.0001, pad=False)
+
+        print(self.audio_file1.shape)
 
         fig = plt.subplots(figsize=(14, 5))
         gs = gridspec.GridSpec(4, 4)
         # gs.update(wspace=0.5)
 
         ax1 = plt.subplot(gs[0, :2])
-        img1 = librosa.display.waveshow(y=self.audio_file1, sr=self.sr_1, ax=ax1)
+        img1 = librosa.display.waveshow(y=self.audio_file1, sr=self.sr_1, ax=ax1, )
         ax1.set_title(f'Waveplot fingerstyle (zero-crossing rate = {zrc_total_f1.sum()})')
 
         ax2 = plt.subplot(gs[0, 2:])
         img2 = librosa.display.waveshow(y=self.audio_file2, sr=self.sr_2, ax=ax2, color='green')
         ax2.set_title(f'Waveplot pick (zero-crossing rate = {zrc_total_f2.sum()})')
 
+        major_ticks = np.arange(n0, n1, 100)
+
         ax3 = plt.subplot(gs[1, :2])
         ax3.plot(self.audio_file1[n0:n1])
+        ax3.set_xticks([i for i in range(0, 1000, 100)], major_ticks)
         ax3.grid()
         ax3.set_title(f'Waveplot fingerstyle zoomed (zero-crossing rate = {zrc_interval_f1.sum()})')
         # ax3.set_xlabel('Time') # в чём измеряется время?
