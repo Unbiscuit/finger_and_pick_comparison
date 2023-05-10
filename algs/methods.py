@@ -4,6 +4,30 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import sklearn
+import pandas as pd
+def strip(x, frame_length, hop_length, back=False):
+    # Compute RMSE.
+    rmse = librosa.feature.rms(y=x, frame_length=frame_length, hop_length=hop_length, center=True)
+    thresh = 0.05
+    if not back:
+        frame_index = 0
+        while rmse[0][frame_index] < thresh:
+            frame_index += 1
+
+        # Convert units of frames to samples.
+        start_sample_index = librosa.frames_to_samples(frame_index, hop_length=hop_length)
+
+        # Return the trimmed signal.
+        return x[start_sample_index:]
+    else:
+        frame_index = rmse[0].shape[0] - 1
+        while rmse[0][frame_index] < thresh:
+            frame_index -= 1
+        # Convert units of frames to samples.
+        end_sample_index = librosa.frames_to_samples(np.array(range(0, frame_index+1)), hop_length=hop_length)
+
+        # Return the trimmed signal.
+        return x[:end_sample_index[-1]]
 
 def normalize(x, axis=0):
     return sklearn.preprocessing.minmax_scale(x, axis=axis)
@@ -14,9 +38,15 @@ class jrock:
         self.path2 = path2
 
         audio_file_1, self.sr_1 = librosa.load(f'{path1}')
-        self.audio_file1, self.index_1 = librosa.effects.trim(audio_file_1)
+        self.audio_file1, self.index_1 = librosa.effects.trim(audio_file_1, frame_length=1024, hop_length=512)
         audio_file_2, self.sr_2 = librosa.load(f'{path2}')
-        self.audio_file2, self.index_2 = librosa.effects.trim(audio_file_2)
+        self.audio_file2, self.index_2 = librosa.effects.trim(audio_file_2, frame_length=1024, hop_length=512)
+
+        self.audio_file1 = strip(self.audio_file1, 1024, 512)
+        self.audio_file2 = strip(self.audio_file2, 1024, 512)
+        self.audio_file1 = strip(self.audio_file1, 1024, 512, True)[:-200]
+        self.audio_file2 = strip(self.audio_file2, 1024, 512, True)[:-200]
+
 
         spectral_centroids_f1 = librosa.feature.spectral_centroid(y=self.audio_file1, sr=self.sr_1)[0]
         frames_f1 = range(len(spectral_centroids_f1))
@@ -45,9 +75,9 @@ class jrock:
         plt.ylabel('MFCC Coefficients')
         plt.title('Difference between MFCCs of the two audio files')
         plt.colorbar()
-        
+
         return fig
-    
+
     def melspec(self):
         # Compute the Mel spectrogram
         mel_spec1 = librosa.feature.melspectrogram(y=self.audio_file1, sr=self.sr_1)
@@ -66,14 +96,17 @@ class jrock:
         plt.tight_layout()
 
         return fig
-        
+
     def centroid(self):
         # Compute the spectral centroid for each audio file
-        spectral_centroid_1 = librosa.feature.spectral_centroid(y=self.audio_file1, sr=self.sr_1)[0]
-        spectral_centroid_2 = librosa.feature.spectral_centroid(y=self.audio_file2, sr=self.sr_2)[0]
+        FRAME_SIZE = 1024
+        HOP_LENGTH = 512
+        spectral_centroid_1 = librosa.feature.spectral_centroid(y=self.audio_file1, sr=self.sr_1, n_fft=FRAME_SIZE, hop_length=HOP_LENGTH)[0]
+        spectral_centroid_2 = librosa.feature.spectral_centroid(y=self.audio_file2, sr=self.sr_2, n_fft=FRAME_SIZE, hop_length=HOP_LENGTH)[0]
         min_length = min(len(spectral_centroid_1), len(spectral_centroid_2))
-        shortened_centroid_1 = normalize(spectral_centroid_1)[:min_length]
-        shortened_centroid_2 = normalize(spectral_centroid_2)[:min_length]
+        shortened_centroid_1 = spectral_centroid_1[:min_length-2]
+        shortened_centroid_2 = spectral_centroid_2[:min_length-2]
+
 
         # Create a new figure and plot the spectral centroid for audio file 1
         fig = plt.subplots(figsize=(14, 6))
@@ -89,7 +122,7 @@ class jrock:
         ax1.set_xlabel('Time (seconds)')
 
         ax2 = plt.subplot(gs[1, :2])
-        img3 = librosa.display.waveshow(y=self.audio_file1, sr=self.sr_1, alpha=0.4, ax=ax2)
+        # img3 = librosa.display.waveshow(y=self.audio_file1, sr=self.sr_1, alpha=0.4, ax=ax2)
         ax2.plot(self.t1, normalize(spectral_centroid_1), color='orange', label=f'{self.path1[-14:]}')
         ax2.set_title(f'Spectral Centroids')
         ax2.set_ylabel('Frequency')
@@ -98,30 +131,34 @@ class jrock:
 
         # Plot the spectral centroid for audio file 2 in the same figure
         ax3 = plt.subplot(gs[1, 2:])
-        img4 = librosa.display.waveshow(y=self.audio_file2, sr=self.sr_2, alpha=0.4, ax=ax3)
+        # img4 = librosa.display.waveshow(y=self.audio_file2, sr=self.sr_2, alpha=0.4, ax=ax3)
         ax3.plot(self.t2, normalize(spectral_centroid_2), color='g', label=f'{self.path2[-12:]}')
         ax3.set_title(f'Spectral Centroids')
         ax3.set_ylabel('')
         ax3.set_xlabel('Time (seconds)')
         ax3.legend()
 
+
+        frames = range(len(shortened_centroid_1))
+        t = librosa.frames_to_time(frames)
+
         ax4 = plt.subplot(gs[2, 1:3])
-        ax4.plot(shortened_centroid_1, color='orange', label=f'{self.path1[-14:]}')
-        ax4.plot(shortened_centroid_2, color='g', label=f'{self.path2[-12:]}')
+        ax4.plot(t, shortened_centroid_1, color='orange', label=f'{self.path1[-14:]}')
+        ax4.plot(t, shortened_centroid_2, color='g', label=f'{self.path2[-12:]}')
         ax4.set_title(f'Spectral Centroids Comparison')
         ax4.set_ylabel('')
         ax4.set_xlabel('Time (seconds)')
         ax4.legend()
 
         return fig
-    
+
     def hpss_helper(self, audio_file):
         stft = librosa.stft(audio_file)
         magnitude, phase = librosa.magphase(stft)
         harmonic, percussive = librosa.decompose.hpss(magnitude)
 
         return magnitude, harmonic, percussive
-    
+
     def hpss(self):
 
         magnitude, harmonic, percussive = self.hpss_helper(self.audio_file1)
@@ -160,7 +197,7 @@ class jrock:
         plt.title(f'Percussive {self.path2[-12:]}')
 
         return fig
-    
+
     def rolloff_helper(self, audio, sr):
         rolloff = librosa.feature.spectral_rolloff(y=audio, sr=sr, roll_percent=0.99)
         rolloff_min = librosa.feature.spectral_rolloff(y=audio, sr=sr, roll_percent=0.01)
@@ -191,7 +228,7 @@ class jrock:
         ax2.set_title(f'log Power spectrogram {self.path2}')
 
         return fig
-    
+
     def contrast_helper(self, y, sr):
         S = np.abs(librosa.stft(y))
         contrast = librosa.feature.spectral_contrast(S=S, sr=sr)
@@ -221,13 +258,13 @@ class jrock:
         ax[1, 1].set(ylabel='Frequency bands', title=f'Spectral contrast of {self.path2}')
 
         return fig
-    
+
     def tonnetz_helper(self, y, sr):
         hamonic_y = librosa.effects.harmonic(y)
         tonnetz = librosa.feature.tonnetz(y=hamonic_y, sr=sr)
 
         return hamonic_y, tonnetz
-    
+
     def tonnetz(self):
 
         harmonic_y, tonnetz = self.tonnetz_helper(self.audio_file1, self.sr_1)
@@ -252,7 +289,7 @@ class jrock:
         fig.colorbar(img4, ax=[ax[1, 1]])
 
         return fig
-    
+
     def fft_func(self):
     # Open the first WAV file and extract audio data
         with wave.open(self.path1, 'rb') as wav_file:
@@ -293,7 +330,7 @@ class jrock:
         ax.set_ylabel('Magnitude')
         ax.set_title('DFT Spectrum Comparison')
         ax.legend()
-        
+
         return fig
 
     def chromagram_func(self):
@@ -324,61 +361,74 @@ class jrock:
 
     '''Zero-Crossing Rate'''
     def zcr_func(self):
-        n0 = 1000
-        n1 = 2000
-        zrc_total_f1 = librosa.feature.zero_crossing_rate(self.audio_file1 + 0.0001, pad=False)# проверить еще раз смысл pad=False
-        zrc_total_f2 = librosa.feature.zero_crossing_rate(self.audio_file2 + 0.0001, pad=False)
+        n0 = 0
+        n1 = 2048
+        # n0 = 1024
+        # n1 = 3073
+        zrc_total_f1 = librosa.feature.zero_crossing_rate(self.audio_file1 + 0.0001, pad=False)[0]# проверить еще раз смысл pad=False
+        zrc_total_f2 = librosa.feature.zero_crossing_rate(self.audio_file2 + 0.0001, pad=False)[0]
         zrc_interval_f1 = librosa.zero_crossings(self.audio_file1[n0:n1] + 0.0001, pad=False)
         zrc_interval_f2 = librosa.zero_crossings(self.audio_file2[n0:n1] + 0.0001, pad=False)
+
+        frames_f1 = range(len(zrc_total_f1))
+        frames_f2 = range(len(zrc_total_f2))
+        t_f1 = librosa.frames_to_time(frames_f1)
+        t_f2 = librosa.frames_to_time(frames_f2)
 
         fig = plt.subplots(figsize=(14, 5))
         gs = gridspec.GridSpec(4, 4)
         # gs.update(wspace=0.5)
 
         ax1 = plt.subplot(gs[0, :2])
-        img1 = librosa.display.waveshow(y=self.audio_file1, sr=self.sr_1, ax=ax1)
-        # ax1.plot(np.arange(0, len(self.audio_file1)) / self.sr_1, self.audio_file1)
-        ax1.set_title(f'Waveplot fingerstyle (zero-crossing rate = {zrc_total_f1.sum()})')
+        # img1 = librosa.display.waveshow(y=self.audio_file1, sr=self.sr_1, ax=ax1)
+        ax1.plot(np.arange(0, len(self.audio_file1)) / self.sr_1, self.audio_file1)
+        ax1.set_title(f'Waveplot pick (zero-crossing rate = {zrc_total_f1.mean()})')
 
         ax2 = plt.subplot(gs[0, 2:])
-        img2 = librosa.display.waveshow(y=self.audio_file2, sr=self.sr_2, ax=ax2, color='green')
-        # ax2.plot(np.arange(0, len(self.audio_file2)) / self.sr_2, self.audio_file2)
-        ax2.set_title(f'Waveplot pick (zero-crossing rate = {zrc_total_f2.sum()})')
+        # img2 = librosa.display.waveshow(y=self.audio_file2, sr=self.sr_2, ax=ax2, color='green')
+        ax2.plot(np.arange(0, len(self.audio_file2)) / self.sr_2, self.audio_file2, color='green')
+        ax2.set_title(f'Waveplot fingerstyle (zero-crossing rate = {zrc_total_f2.mean()})')
 
         ax3 = plt.subplot(gs[1, :2])
         ax3.plot(self.audio_file1[n0:n1])
         ax3.grid()
-        ax3.set_title(f'Waveplot fingerstyle zoomed (zero-crossing rate = {zrc_interval_f1.sum()})')
+        ax3.set_title(f'Waveplot pick zoomed (zero-crossing rate = {zrc_interval_f1.sum()})')
         # ax3.set_xlabel('Time') # в чём измеряется время?
         ax3.set_ylabel('Amplitude')
 
         ax4 = plt.subplot(gs[1, 2:])
         ax4.plot(self.audio_file2[n0:n1], color='green')
         ax4.grid()
-        ax4.set_title(f'Waveplot pick zoomed (zero-crossing rate = {zrc_interval_f2.sum()})')
+        ax4.set_title(f'Waveplot fingerstyle zoomed (zero-crossing rate = {zrc_interval_f2.sum()})')
         # ax4.set_xlabel('Time')
         ax4.set_ylabel('Amplitude')
 
         ax5 = plt.subplot(gs[2, :2])
-        ax5.plot(zrc_total_f1[0])
-        ax5.plot(zrc_total_f1[0])
+        img5 = librosa.display.waveshow(y=self.audio_file1, sr=self.sr_1, ax=ax5, alpha=0.5)
+        ax5.plot(t_f1, zrc_total_f1*2048)
         ax5.grid()
-        ax5.set_title('Zero-cross rate fingerstyle')
+        ax5.set_title('Zero-cross rate pick')
 
         ax6 = plt.subplot(gs[2, 2:], sharey=ax5)
-        ax6.plot(zrc_total_f2[0])
-        ax6.plot(zrc_total_f2[0], color='green')
+        img6 = librosa.display.waveshow(y=self.audio_file2, sr=self.sr_1, ax=ax6, alpha=0.5)
+        ax6.plot(t_f2, zrc_total_f2*2048, color='green')
         ax6.grid()
-        ax6.set_title('Zero-cross rate pick')
+        ax6.set_title('Zero-cross rate fingerstyle')
 
-        ax7 = plt.subplot(gs[3, 1:3])
-        ax7.plot(zrc_total_f1[0])
-        ax7.plot(zrc_total_f2[0], color='green')
+        ax7 = plt.subplot(gs[3, :2])
+        ax7.plot(zrc_total_f1)
+        ax7.plot(zrc_total_f2, color='green')
         ax7.legend() # add legend
         ax7.set_title('Zero-cross rate comparison')
 
+        zcr_stat = pd.DataFrame(data=None, columns=['Pick', 'Fingerstyle'])
+        zcr_stat.loc['Всего zcr'] = [zrc_interval_f1.sum(), zrc_interval_f2.sum()]
+        # ax8 = plt.subplot(gs[3, 2:])
+        # table = ax8.table(cellText=zcr_stat.values, colLabels=zcr_stat.columns, loc='center')
+
+        print(zrc_total_f1)
         plt.tight_layout()
-        
+
         return fig
 
     def spect_bendwidth_func(self, _p: int = 2):
@@ -405,5 +455,5 @@ class jrock:
         ax3.set_title('Spectral bendwidth comparison')
 
         return fig
-    
+
 
